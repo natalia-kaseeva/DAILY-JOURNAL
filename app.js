@@ -16,7 +16,9 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://127.0.0.1:27017/blogDB", {useNewUrlParser: true});
+//mongoose.connect("mongodb://127.0.0.1:27017/blogDB", {useNewUrlParser: true});
+
+mongoose.connect("mongodb+srv://admin-nataliakass:40p9M2k591BrR8E1@cluster0.pwmvj.mongodb.net/blogDB", {useNewUrlParser: true, useUnifiedTopology: true});
 
 //create a new postSchema that contains a title and content
 const postSchema = {
@@ -65,11 +67,23 @@ const requestedPostId = req.params.postId;
   //use the findOne() method to find the post with a matching id in the posts collection
   Post.findOne({_id: requestedPostId}, function(err, post){
     res.render("post", {
+      id: post._id,
       title: post.title,
       content: post.content
     });
   });
 
+});
+
+app.post("/delete", function(req, res){
+  const postID = req.body.postID;
+
+  Post.findByIdAndRemove(postID, function(err){
+    if (!err) {
+      console.log("Successfully deleted checked item.");
+      res.redirect("/");
+    }
+  });
 });
 
 app.get("/about", function(req, res){
