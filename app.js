@@ -13,12 +13,17 @@ const app = express();
 
 app.set('view engine', 'ejs');
 
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(express.static("public"));
 
 //mongoose.connect("mongodb://127.0.0.1:27017/blogDB", {useNewUrlParser: true});
 
-mongoose.connect("mongodb+srv://admin-nataliakass:40p9M2k591BrR8E1@cluster0.pwmvj.mongodb.net/blogDB", {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect("mongodb+srv://admin-nataliakass:40p9M2k591BrR8E1@cluster0.pwmvj.mongodb.net/blogDB", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
 
 //create a new postSchema that contains a title and content
 const postSchema = {
@@ -29,22 +34,22 @@ const postSchema = {
 //create a new mongoose model using the schema to define your posts collection
 const Post = mongoose.model("Post", postSchema);
 
-app.get("/", function(req, res){
+app.get("/", function (req, res) {
 
   //find all the posts in the posts collection and render that in the home.ejs file
-  Post.find({}, function(err, posts){
+  Post.find({}, function (err, posts) {
     res.render("home", {
       startingContent: homeStartingContent,
       posts: posts
-      });
+    });
   });
 });
 
-app.get("/compose", function(req, res){
+app.get("/compose", function (req, res) {
   res.render("compose");
 });
 
-app.post("/compose", function(req, res){
+app.post("/compose", function (req, res) {
 
   //create a new post document using your mongoose model
   const post = new Post({
@@ -53,48 +58,87 @@ app.post("/compose", function(req, res){
   });
 
   //add a call back to the mongoose save() method.
-  post.save(function(err){
-    if (!err){
-        res.redirect("/");
+  post.save(function (err) {
+    if (!err) {
+      res.redirect("/");
     }
   });
 });
 
-app.get("/posts/:postId", function(req, res){
+app.get("/posts/:postId", function (req, res) {
 
-const requestedPostId = req.params.postId;
+  const requestedPostId = req.params.postId;
 
   //use the findOne() method to find the post with a matching id in the posts collection
-  Post.findOne({_id: requestedPostId}, function(err, post){
+  Post.findOne({
+    _id: requestedPostId
+  }, function (err, post) {
     res.render("post", {
       id: post._id,
       title: post.title,
       content: post.content
     });
   });
-
 });
 
-app.post("/delete", function(req, res){
+app.get("/posts/:postId/update", function (req, res) {
+
+  const requestedPostId = req.params.postId;
+
+  //use the findOne() method to find the post with a matching id in the posts collection
+  Post.findOne({
+    _id: requestedPostId
+  }, function (err, post) {
+    res.render("update", {
+      id: post._id,
+      title: post.title,
+      content: post.content
+    });
+  });
+});
+
+app.post("/update", function (req, res) {
   const postID = req.body.postID;
 
-  Post.findByIdAndRemove(postID, function(err){
+  Post.findByIdAndUpdate(postID, {
+    "$set": {
+      title: req.body.postTitle,
+      content: req.body.postBody
+    }
+  }, {
+    new: true
+  }, function (err) {
     if (!err) {
-      console.log("Successfully deleted checked item.");
+      console.log("Successfully updated the post.");
       res.redirect("/");
     }
   });
 });
 
-app.get("/about", function(req, res){
-  res.render("about", {aboutContent: aboutContent});
+app.post("/delete", function (req, res) {
+  const postID = req.body.postID;
+
+  Post.findByIdAndRemove(postID, function (err) {
+    if (!err) {
+      console.log("Successfully deleted the post.");
+      res.redirect("/");
+    }
+  });
 });
 
-app.get("/contact", function(req, res){
-  res.render("contact", {contactContent: contactContent});
+app.get("/about", function (req, res) {
+  res.render("about", {
+    aboutContent: aboutContent
+  });
+});
+
+app.get("/contact", function (req, res) {
+  res.render("contact", {
+    contactContent: contactContent
+  });
 });
 
 
-app.listen(3000, function() {
+app.listen(3000, function () {
   console.log("Server started on port 3000");
 });
